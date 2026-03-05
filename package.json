@@ -1,0 +1,38 @@
+{
+  "name": "crm-phase1-app",
+  "version": "1.0.0",
+  "description": "Phase I CRM Trial Management Application",
+  "main": "src/main.js",
+  "homepage": "./",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "latest",
+    "electron-builder": "latest"
+  },
+  "build": {
+    "appId": "com.crm.phase1",
+    "productName": "CRM Phase 1 Trial",
+    "files": [
+      "src/**/*",
+      "shiny_app/**/*",
+      "public/**/*"
+    ],
+    "directories": {
+      "buildResources": "public"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
