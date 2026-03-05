@@ -1,1 +1,92 @@
+name: Build Electron App
 
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            artifact: '*.AppImage'
+          - os: windows-latest
+            artifact: '*.exe'
+          - os: macos-latest
+            artifact: '*.dmg'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+    
+    - name: Set up R
+      uses: r-lib/actions/setup-r@v2
+      with:
+        r-version: 'latest'
+    
+    - name: Install R packages
+      run: |
+        R -e "install.packages(c('shiny', 'shinydashboard', 'ggplot2', 'dplyr', 'DT', 'gridExtra', 'scales'), repos='http://cran.r-project.org')"
+    
+    - name: Install Node dependencies
+      run: npm install
+    
+    - name: Build Electron app
+      run: npm run build
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-${{ matrix.os }}
+        path: dist/
+    
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: dist/**
+
+  publish-release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+    
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v1.0.${{ github.run_number }}
+        release_name: Release v1.0.${{ github.run_number }}
+        body: |
+          Automated release of CRM Phase 1 Trial App
+          
+          **Downloads:**
+          - Windows: CRM-Phase1-App.exe
+          - Mac: CRM-Phase1-App.dmg
+          - Linux: CRM-Phase1-App.AppImage
+          
+          **Installation:**
+          1. Download the file for your operating system
+          2. Run the installer or executable
+          3. App launches automatically
+          
+          **Features:**
+          - Offline operation
+          - No R installation required
+          - Phase I dose-escalation analysis
+          - Automatic cohort tracking
+          - CRM simulations and planning
